@@ -1,0 +1,15 @@
+export const COUNTRIES = [
+  "India",
+  "United Arab Emirates",
+  "United States",
+  "United Kingdom",
+  "Singapore",
+  "Canada",
+  "Australia",
+  "Saudi Arabia",
+  "Qatar",
+  "Kuwait",
+  "Oman",
+  "Bahrain",
+  "Other",
+];

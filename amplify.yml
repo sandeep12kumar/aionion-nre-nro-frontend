@@ -1,0 +1,38 @@
+# AWS Amplify build settings for the two portals in this repo.
+# Connect the repo twice in Amplify (tick "My app is a monorepo"):
+#   app 1 -> monorepo root directory: client-portal
+#   app 2 -> monorepo root directory: rm-portal
+version: 1
+applications:
+  - appRoot: client-portal
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*
+  - appRoot: rm-portal
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - "**/*"
+      cache:
+        paths:
+          - node_modules/**/*

@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default before applyRegimeTheme() runs / before an account type is
+     chosen -- matches brand.blue in tailwind.config.js (NRE's color, the
+     default account type). See applicationState.js's applyRegimeTheme. */
+  --regime-color: #0023ff;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900;
+}

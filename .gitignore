@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# local settings stay local; .env.production (no secrets) is committed
+.env
+*.log
+.DS_Store
+Thumbs.db
