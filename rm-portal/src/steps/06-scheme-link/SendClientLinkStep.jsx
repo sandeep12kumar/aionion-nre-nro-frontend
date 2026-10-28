@@ -109,12 +109,15 @@ export default function SendClientLinkStep({ onBack }) {
                 ? `We've emailed the link to ${result.email}. It's valid for 7 days.`
                 : `Email couldn't be sent (SMTP not configured) — copy the link below and share it with ${result.email}.`}
             </p>
-            <div className="mx-auto mt-4 flex max-w-xl items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
-              <span className="min-w-0 flex-1 truncate text-left text-xs text-slate-600">{result.link}</span>
-              <button type="button" className="text-xs font-semibold text-brand-blue" onClick={copyLink}>
-                {copied ? "Copied" : "Copy"}
-              </button>
-            </div>
+            {/* the link goes out by email; it's only shown when the email couldn't be sent */}
+            {!result.emailed && (
+              <div className="mx-auto mt-4 flex max-w-xl items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                <span className="min-w-0 flex-1 truncate text-left text-xs text-slate-600">{result.link}</span>
+                <button type="button" className="text-xs font-semibold text-brand-blue" onClick={copyLink}>
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+            )}
             <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
               <Button variant="outline" className="justify-center" onClick={sendLink} disabled={loading}>
                 {loading ? "Please wait…" : "Resend link"}
