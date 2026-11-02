@@ -5,17 +5,16 @@ import PhaseTabs from "../../components/layout/PhaseTabs";
 import SchemeSelectStep from "./SchemeSelectStep";
 import ClientSignatureStep from "./ClientSignatureStep";
 import SendClientLinkStep from "./SendClientLinkStep";
-import { getKraBranch, getBasePath, getHasAadhaar } from "../../services/applicationState";
+import { getKraBranch, getBasePath } from "../../services/applicationState";
 
-// The signature phase only exists when the client has no Aadhaar -- Aadhaar
-// holders e-sign later in client-portal instead.
+// Every client gives a signature here -- Aadhaar holders also e-sign later in
+// client-portal.
+const phases = ["scheme", "signature", "client-link"];
+const labels = ["Scheme", "Client signature", "Client link"];
+
 export default function SchemeLinkStep() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const needsSignature = getHasAadhaar() === false;
-
-  const phases = needsSignature ? ["scheme", "signature", "client-link"] : ["scheme", "client-link"];
-  const labels = needsSignature ? ["Scheme", "Client signature", "Client link"] : ["Scheme", "Client link"];
 
   const [phase, setPhase] = useState(() => {
     const index = phases.indexOf(searchParams.get("phase"));

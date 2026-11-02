@@ -5,11 +5,11 @@ import StepFooter from "../../components/layout/StepFooter";
 import UploadDropzone from "../../components/ui/UploadDropzone";
 import { viewStoredDocument } from "../../services/viewDocument";
 import api from "../../services/api";
-import { getPanNumber } from "../../services/applicationState";
+import { getPanNumber, getHasAadhaar } from "../../services/applicationState";
 
-// Only shown when the RM answered "No" to "Do you have an Aadhaar card?" --
-// without Aadhaar the client can't e-sign, so the RM collects the physical
-// signature specimen here, before the client link is sent.
+// The RM collects every client's physical signature specimen here, before the
+// client link is sent. It makes the wet signature PDF; Aadhaar holders also
+// e-sign in client-portal.
 export default function ClientSignatureStep({ onNext, onBack }) {
   const panNumber = getPanNumber();
 
@@ -61,10 +61,12 @@ export default function ClientSignatureStep({ onNext, onBack }) {
   return (
     <Card className="p-8">
       <div>
-        <p className="text-xs font-semibold tracking-wide text-pink-500">NO AADHAAR · SIGNATURE REQUIRED</p>
+        <p className="text-xs font-semibold tracking-wide text-pink-500">SIGNATURE REQUIRED</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900">Client signature</h2>
         <p className="mt-1 text-sm text-slate-500">
-          The client doesn't have Aadhaar, so they can't e-sign. Collect their physical signature specimen here.
+          {getHasAadhaar()
+            ? "Collect the client's physical signature specimen here. They will also e-sign with Aadhaar after payment and live photo."
+            : "The client doesn't have Aadhaar, so they can't e-sign. Collect their physical signature specimen here."}
         </p>
       </div>
 

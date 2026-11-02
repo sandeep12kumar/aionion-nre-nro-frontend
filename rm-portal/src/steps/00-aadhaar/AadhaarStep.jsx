@@ -16,8 +16,9 @@ const OPTIONS = ["Yes", "No"];
 
 // RM step after the account type: the answer decides how the client signs.
 //   Yes -> the client e-signs with Aadhaar in client-portal.
-//   No  -> the RM collects a signature (upload / signature pad) at the end
-//          of the Scheme step, before sending the client link.
+//   No  -> the wet signature is the only signature.
+// Either way the RM collects a signature (upload / signature pad) at the end
+// of the Scheme step, before sending the client link.
 export default function AadhaarStep() {
   const navigate = useNavigate();
   const saved = getHasAadhaar();
@@ -80,7 +81,7 @@ export default function AadhaarStep() {
           {answer && (
             <p className='rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600'>
               {answer === "Yes"
-                ? "The client will sign using Aadhaar e-sign on their side, after payment and live photo."
+                ? "You'll collect the client's signature at the last step, and the client will also sign using Aadhaar e-sign on their side, after payment and live photo."
                 : "You'll collect the client's signature and upload at the last step, before sending the client link."}
             </p>
           )}

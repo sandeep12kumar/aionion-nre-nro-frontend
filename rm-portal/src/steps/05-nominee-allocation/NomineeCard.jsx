@@ -4,6 +4,13 @@ import Select from "../../components/ui/Select";
 
 const RELATIONS = ["Spouse", "Son", "Daughter", "Father", "Mother", "Brother", "Sister", "Other"];
 const GUARDIAN_RELATIONS = ["Father", "Mother", "Grandfather", "Grandmother", "Brother", "Sister", "Other"];
+const ID_PROOF_TYPES = ["Aadhaar", "PAN", "Passport"];
+const alphanumeric = (value) => value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+const ID_PROOF_INPUTS = {
+  Aadhaar: { label: "Aadhaar number", inputMode: "numeric", maxLength: 12, clean: (value) => value.replace(/\D/g, "") },
+  PAN: { label: "PAN number", maxLength: 10, clean: alphanumeric },
+  Passport: { label: "Passport number", maxLength: 12, clean: alphanumeric },
+};
 
 function ageFromDob(dob) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dob || "")) return null;
@@ -17,6 +24,7 @@ function ageFromDob(dob) {
 
 export default function NomineeCard({ index, nominee, onChange, onRemove, canRemove, allocationLocked }) {
   const update = (key) => (e) => onChange(index, { ...nominee, [key]: e.target.value });
+  const proofInput = ID_PROOF_INPUTS[nominee.idProofType];
   const age = ageFromDob(nominee.dob);
   const today = new Date();
   const maxDob = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -49,6 +57,26 @@ export default function NomineeCard({ index, nominee, onChange, onRemove, canRem
         <Input label="Mobile number" required type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10}
           value={nominee.mobile || ""} onChange={(e) => onChange(index, { ...nominee, mobile: e.target.value.replace(/\D/g, "") })} />
         <Input label="Email" required type="email" autoComplete="off" value={nominee.email || ""} onChange={update("email")} />
+      </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <Select
+          label="Nominee proof"
+          required
+          options={ID_PROOF_TYPES}
+          value={nominee.idProofType || ""}
+          onChange={(e) => onChange(index, { ...nominee, idProofType: e.target.value, idProofNumber: "" })}
+        />
+        {proofInput && (
+          <Input
+            label={proofInput.label}
+            required
+            inputMode={proofInput.inputMode}
+            maxLength={proofInput.maxLength}
+            autoComplete="off"
+            value={nominee.idProofNumber || ""}
+            onChange={(e) => onChange(index, { ...nominee, idProofNumber: proofInput.clean(e.target.value) })}
+          />
+        )}
       </div>
       {age !== null && (
         <p className={`mt-4 text-sm ${age < 18 ? "font-semibold text-amber-700" : "text-slate-500"}`}>

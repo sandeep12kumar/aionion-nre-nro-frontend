@@ -15,6 +15,8 @@ const emptyNominee = () => ({
   allocationPercentage: "",
   mobile: "",
   email: "",
+  idProofType: "",
+  idProofNumber: "",
 });
 
 // Equal split with the 100%-remainder handed to the first N nominees, e.g.
