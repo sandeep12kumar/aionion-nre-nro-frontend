@@ -5,13 +5,15 @@ import Card from "../../components/ui/Card";
 import StepFooter from "../../components/layout/StepFooter";
 import api from "../../services/api";
 import { getPanNumber, getKraBranch, getBasePath } from "../../services/applicationState";
+import DocumentUploadTile from "../../components/ui/DocumentUploadTile";
 import IdProofUpload from "./IdProofUpload";
 
 // Address proofs: one Indian (passport or Aadhaar) and one foreign address proof, same for
 // NRE and NRO (document types local_id_proof / foreign_id_proof). The name and
 // address are read from the uploaded document (OCR), corrected by the RM if
 // needed, and stored. Server side: services/proofs/idProofOcr.js (via
-// nreProofs / nroProofs). Comes after Bank & proofs, before Personal & Nominee.
+// nreProofs / nroProofs). The passport beside them is only stored and attached
+// to the PDF. Comes after Bank & proofs, before Personal & Nominee.
 const REQUIRED_DOCS = ["local_id_proof", "foreign_id_proof"];
 
 export default function AddressProofsStep() {
@@ -50,6 +52,10 @@ export default function AddressProofsStep() {
       setError("Please upload both the local and the foreign address proof before continuing.");
       return;
     }
+    if (!docFor("passport")) {
+      setError("Please upload the client's passport before continuing.");
+      return;
+    }
     const pending = REQUIRED_DOCS.filter((type) => unsaved[type]);
     if (pending.length) {
       const names = pending.map((type) => (type === "local_id_proof" ? "Indian" : "foreign")).join(" and ");
@@ -86,6 +92,15 @@ export default function AddressProofsStep() {
             <IdProofUpload {...idProof("foreign_id_proof", "foreign")} title="Foreign address proof"
               uploadTitle="Upload any foreign address proof"
               uploadSubtitle="Passport, OCI card, driving licence, utility bill or bank statement — image or PDF. We'll identify it and read the name and address."
+            />
+            <DocumentUploadTile
+              panNumber={panNumber}
+              documentType="passport"
+              title="Passport"
+              subtitle="The client's passport — image or PDF."
+              existingFileName={docFor("passport")?.file_name || null}
+              onUploaded={refreshDocuments}
+              onRemoved={refreshDocuments}
             />
           </div>
           <p className="text-xs text-slate-400">

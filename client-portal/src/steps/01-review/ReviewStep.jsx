@@ -12,6 +12,7 @@ import { nextStepPath } from "../stepsConfig";
 const COMMON_PROOF_TYPES = [
   ["local_id_proof", "Indian address proof"],
   ["foreign_id_proof", "Foreign address proof"],
+  ["passport", "Passport"],
 ];
 const BANK_PROOF_TYPES_BY_ACCOUNT_TYPE = {
   NRO: [
