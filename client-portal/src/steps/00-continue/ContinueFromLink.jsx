@@ -23,7 +23,7 @@ export default function ContinueFromLink() {
       .get(`/client-link/resolve/${token}`)
       .then(({ data }) => {
         if (cancelled) return;
-        setClientSession({ token, panNumber: data.panNumber, accountType: data.accountType, hasAadhaar: data.hasAadhaar });
+        setClientSession({ token, panNumber: data.panNumber, accountType: data.accountType, hasAadhaar: data.hasAadhaar, ipvRequired: data.ipvRequired });
         navigate(resumeStepPath(data), { replace: true });
       })
       .catch((err) => {

@@ -1,7 +1,15 @@
+# secrets -- each app's .env stays local (.env.production holds no secrets and is committed)
+.env
+
+# build output / dependencies
 node_modules/
 dist/
-# local settings stay local; .env.production (no secrets) is committed
-.env
-*.log
+
+# exported client data and working documents -- never commit
+*.csv
+*.docx
+*.xlsx
+
+# OS files
 .DS_Store
 Thumbs.db

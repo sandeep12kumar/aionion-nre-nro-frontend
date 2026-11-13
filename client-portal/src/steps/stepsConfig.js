@@ -1,4 +1,4 @@
-import { getBasePath, getHasAadhaar } from "../services/applicationState";
+import { getBasePath, getHasAadhaar, getIpvRequired } from "../services/applicationState";
 
 // The client's half of the journey, opened from the link their RM emailed.
 // The last step, E-sign, is where the application is signed and submitted:
@@ -31,6 +31,13 @@ const ALL_STEPS = [
     subtitle: "Quick selfie liveness check",
   },
   {
+    // only when the server's IPV_ENABLED is on (see getSteps)
+    id: "ipv",
+    path: "/ipv",
+    title: "Video IPV",
+    subtitle: "Video call with your RM",
+  },
+  {
     id: "esign",
     get path() {
       return getHasAadhaar() ? "/esign" : "/submit";
@@ -41,7 +48,7 @@ const ALL_STEPS = [
 ];
 
 export function getSteps() {
-  return ALL_STEPS;
+  return ALL_STEPS.filter((step) => step.id !== "ipv" || getIpvRequired());
 }
 
 export function stepIndex(stepId) {

@@ -5,6 +5,7 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import { CheckCircleIcon } from "../../components/ui/icons";
 import api from "../../services/api";
+import IpvPanel from "../../ipv/IpvPanel";
 import { getPanNumber, getHasAadhaar, getBasePath, clearApplication } from "../../services/applicationState";
 
 const SCHEME_LABELS = { lifeTime: "Life Time Advantage", annualCare: "Annual Care" };
@@ -139,6 +140,9 @@ export default function SendClientLinkStep({ onBack }) {
         )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
+
+        {/* the client's video IPV continues here, once the link has gone out */}
+        {(result || identity?.client_link_sent_at) && <IpvPanel panNumber={panNumber} />}
       </div>
     </Card>
   );
