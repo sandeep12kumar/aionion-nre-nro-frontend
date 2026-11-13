@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import logo from "../assets/aionion-logo.png";
 import { Button, ErrorBanner, VideoTile } from "./ipvUi";
 import { useLocalMedia } from "./useLocalMedia";
 import { STATUS_LABEL, useIpvCall } from "./useIpvCall";
@@ -53,6 +55,14 @@ export default function ClientIpvCall({ token, documents, onEnded, onClose }) {
     return () => clearTimeout(timer);
   }, [captured]);
 
+  useEffect(() => {
+    if (!ready) return undefined;
+    const elements = [document.documentElement, document.body];
+    const previous = elements.map((element) => element.style.overflow);
+    elements.forEach((element) => { element.style.overflow = "hidden"; });
+    return () => elements.forEach((element, index) => { element.style.overflow = previous[index]; });
+  }, [ready]);
+
   const begin = async () => {
     setBusy(true);
     setError("");
@@ -90,43 +100,47 @@ export default function ClientIpvCall({ token, documents, onEnded, onClose }) {
   }
 
   const connected = call.status === "connected";
-  return (
-    <div className="fixed inset-0 z-50 flex h-[100dvh] flex-col bg-slate-950 text-white">
-      <div className="relative min-h-0 flex-1">
-        <VideoTile stream={call.remoteStream} label="Relationship Manager" className="h-full w-full" />
+  return createPortal(
+    <div className="fixed inset-0 z-50 grid h-[100dvh] w-full grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bg-slate-950 text-white" role="dialog" aria-modal="true" aria-label="Video verification">
+      <header className="flex items-center justify-between gap-3 bg-white px-3 py-2 text-slate-900 sm:px-6 sm:py-3" style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}>
+        <img src={logo} alt="Aionion Capital" className="h-auto w-36 shrink-0 object-contain sm:w-44" />
+        <div className="min-w-0 text-right">
+          <h1 className="text-sm font-bold sm:text-base">Video verification</h1>
+          <p className="text-xs text-slate-500" role="status">{STATUS_LABEL[call.status]}</p>
+        </div>
+      </header>
+      <div className="relative min-h-0 min-w-0 overflow-hidden">
+        <VideoTile stream={media.stream} muted mirrored={media.facing === "user"} label="Your video" className="absolute inset-0 h-full w-full !object-contain" />
+        <span className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-1 text-xs font-semibold">You</span>
+        {!media.cameraOn && <p className="absolute inset-0 flex items-center justify-center text-sm">Your camera is off</p>}
+        <div className="absolute right-3 top-3 w-28 overflow-hidden rounded-xl border border-white/30 bg-slate-900 shadow-lg sm:w-48 lg:w-56">
+          <VideoTile stream={call.remoteStream} label="Relationship Manager" className="aspect-video w-full" />
+          <p className="bg-slate-900 px-2 py-1 text-center text-[10px] font-semibold sm:text-xs">Relationship Manager</p>
+        </div>
+      </div>
+      <footer className="max-h-[45dvh] space-y-2 overflow-y-auto border-t border-slate-800 px-3 pt-2 sm:px-6" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         {!connected && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-6 text-center">
-            <p className="text-base font-medium">
-              {call.status === "waiting" ? "Waiting for your Relationship Manager to join" : STATUS_LABEL[call.status]}
-            </p>
-            <p className="text-sm text-slate-300">Please keep this page open and your documents ready.</p>
+          <div className="text-center" role="status">
+            <p className="text-sm font-medium">{call.status === "waiting" ? "Waiting for your Relationship Manager to join" : STATUS_LABEL[call.status]}</p>
+            <p className="text-xs text-slate-300">Please keep this page open and your documents ready.</p>
           </div>
         )}
-        <div className="absolute right-3 top-3 w-28 overflow-hidden rounded-xl border border-white/30 shadow-lg sm:w-48">
-          <VideoTile stream={media.stream} muted mirrored={media.facing === "user"} label="Your video" className="aspect-[3/4] w-full sm:aspect-video" />
-        </div>
         {request && connected && (
-          <div className="absolute inset-x-3 bottom-3 mx-auto max-w-lg rounded-xl bg-white p-4 text-slate-900 shadow-lg" role="status">
+          <div className="mx-auto max-w-lg rounded-xl bg-white p-3 text-slate-900" role="status">
             <p className="text-sm font-semibold">Please show: {request.label}</p>
             <p className="mt-0.5 text-xs text-slate-600">{request.instruction} Hold it still until your RM confirms.</p>
           </div>
         )}
-        {captured && (
-          <div className="absolute inset-x-3 bottom-3 mx-auto max-w-lg rounded-xl bg-emerald-600 p-3 text-center text-sm font-semibold shadow-lg" role="status">
-            ✓ {captured} saved — thank you
-          </div>
-        )}
-      </div>
-      {(media.error || call.error) && <div className="p-3"><ErrorBanner message={media.error || call.error} /></div>}
-      <div className="flex flex-wrap items-center justify-center gap-2 p-3">
-        <Button variant={media.micOn ? "dark" : "danger"} small onClick={media.toggleMic}>{media.micOn ? "Mute" : "Unmute"}</Button>
-        <Button variant={media.cameraOn ? "dark" : "danger"} small onClick={media.toggleCamera}>{media.cameraOn ? "Camera off" : "Camera on"}</Button>
-        <Button variant="dark" small onClick={media.switchCamera}>Switch camera</Button>
-        <span className="text-xs text-slate-300">{STATUS_LABEL[call.status]}</span>
-      </div>
-      {documents?.length > 0 && !connected && (
-        <p className="pb-3 text-center text-xs text-slate-400">Keep ready: {documents.map((d) => d.label).join(" · ")}</p>
-      )}
-    </div>
+        {captured && <p className="mx-auto max-w-lg rounded-xl bg-emerald-600 p-2 text-center text-sm font-semibold" role="status">{captured} saved — thank you</p>}
+        <ErrorBanner message={media.error || call.error} />
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button variant={media.micOn ? "dark" : "danger"} small onClick={media.toggleMic}>{media.micOn ? "Mute" : "Unmute"}</Button>
+          <Button variant={media.cameraOn ? "dark" : "danger"} small onClick={media.toggleCamera}>{media.cameraOn ? "Camera off" : "Camera on"}</Button>
+          <Button variant="dark" small onClick={media.switchCamera}>Switch camera</Button>
+        </div>
+        {documents?.length > 0 && !connected && <p className="text-center text-xs text-slate-400">Keep ready: {documents.map((d) => d.label).join(" · ")}</p>}
+      </footer>
+    </div>,
+    document.body,
   );
 }
