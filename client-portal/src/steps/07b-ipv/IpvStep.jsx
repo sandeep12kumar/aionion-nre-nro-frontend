@@ -14,6 +14,7 @@ const DOCUMENTS = [
   { type: "pan_card", label: "PAN card" },
   { type: "foreign_id", label: "Foreign ID proof" },
   { type: "signature", label: "Your signature on a white paper" },
+  { type: "session_frame", label: "Live session photo" },
 ];
 
 // Video IPV, after the live photo and before e-sign. "Start IPV" opens the

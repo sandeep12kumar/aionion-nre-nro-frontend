@@ -54,6 +54,12 @@ function LocationPanel({ location }) {
 // the IPV (the report PDF is made then). onClose(status) when it ends or the
 // RM leaves the call.
 export default function RmIpvCall({ token, onClose }) {
+  useEffect(() => {
+    const elements = [document.documentElement, document.body];
+    const previous = elements.map((element) => element.style.overflow);
+    elements.forEach((element) => { element.style.overflow = "hidden"; });
+    return () => elements.forEach((element, index) => { element.style.overflow = previous[index]; });
+  }, []);
   const api = useMemo(() => ipvApi(token), [token]);
   const media = useLocalMedia();
   const remoteVideo = useRef(null);
