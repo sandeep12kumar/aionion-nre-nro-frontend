@@ -123,9 +123,6 @@ export default function SendClientLinkStep({ onBack }) {
               <Button variant="outline" className="justify-center" onClick={sendLink} disabled={loading}>
                 {loading ? "Please wait…" : "Resend link"}
               </Button>
-              <Button className="justify-center" onClick={startNew}>
-                Start a new application →
-              </Button>
             </div>
           </div>
         ) : (
@@ -142,7 +139,7 @@ export default function SendClientLinkStep({ onBack }) {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         {/* the client's video IPV continues here, once the link has gone out */}
-        {(result || identity?.client_link_sent_at) && <IpvPanel panNumber={panNumber} />}
+        {(result || identity?.client_link_sent_at) && <IpvPanel panNumber={panNumber} onStartNew={startNew} />}
       </div>
     </Card>
   );

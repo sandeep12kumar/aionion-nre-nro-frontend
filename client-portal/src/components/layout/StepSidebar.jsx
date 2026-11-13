@@ -6,6 +6,7 @@ const STEP_ICONS = {
   verify_email: MailIcon,
   payment: CardIcon,
   photo: CameraIcon,
+  ipv: CameraIcon,
   esign: IdCardIcon,
 };
 
@@ -23,7 +24,7 @@ export default function StepSidebar({ currentStepId }) {
           {steps.map((step, index) => {
             const isDone = index < currentIndex;
             const isActive = index === currentIndex;
-            const Icon = STEP_ICONS[step.id];
+            const Icon = STEP_ICONS[step.id] || CheckCircleIcon;
 
             return (
               <li

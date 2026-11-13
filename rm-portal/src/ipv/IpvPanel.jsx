@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "../services/api";
+import Button from "../components/ui/Button";
 import RmIpvCall from "./RmIpvCall";
 import { errorMessage, ipvApi } from "./ipvApi";
 
@@ -9,7 +10,7 @@ const POLL_MS = 5000;
 // once the client has paid, taken the live photo and clicked "Start IPV" in
 // client-portal, this shows they're ready and the RM joins the call from
 // here. Hidden while the server's IPV_ENABLED switch is off.
-export default function IpvPanel({ panNumber }) {
+export default function IpvPanel({ panNumber, onStartNew }) {
   const [info, setInfo] = useState(null);
   const [token, setToken] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -89,6 +90,11 @@ export default function IpvPanel({ panNumber }) {
           <button type="button" className="mt-3 text-sm font-semibold text-brand-blue disabled:opacity-50" disabled={busy} onClick={downloadReport}>
             Download IPV report (PDF)
           </button>
+          {onStartNew && (
+            <Button className="mt-4 justify-center" onClick={onStartNew}>
+              Start a new application
+            </Button>
+          )}
         </>
       ) : open ? (
         <>
