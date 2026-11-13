@@ -202,6 +202,7 @@ export default function RmIpvCall({ token, onClose }) {
           </div>
           <ErrorBanner message={media.error || call.error} />
           {media.error && <Button variant="outline" small onClick={() => media.start("user")}>Try again</Button>}
+          <LocationPanel location={location} />
         </div>
 
         <section className="flex flex-col rounded-2xl border border-slate-100 bg-white shadow-sm">
@@ -278,7 +279,6 @@ export default function RmIpvCall({ token, onClose }) {
             <Detail label="Overseas address" value={client.overseasAddress} />
             <Detail label="Phone" value={client.phone} />
           </Panel>
-          <LocationPanel location={location} />
           <Panel title="Session">
             <Detail label="Requested" value={formatTime(session.requestedAt)} />
             <Detail label="Status" value={connected ? "Live" : STATUS_LABEL[call.status]} />
