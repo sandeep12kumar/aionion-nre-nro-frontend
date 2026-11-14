@@ -16,6 +16,72 @@ function grabFrame(video) {
   return canvas.toDataURL("image/jpeg", 0.9);
 }
 
+const MAX_SCREENSHOT_WIDTH = 1920;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The live session photo: a screenshot of the RM's own call screen (client
+// video, RM video, checklist, client details and location together), taken
+// with the browser's screen capture -- it asks the RM to share this tab.
+// Returns null when the RM declines or the browser can't capture the screen.
+async function grabScreen() {
+  if (!navigator.mediaDevices?.getDisplayMedia) return null;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getDisplayMedia({
+      video: { displaySurface: "browser", frameRate: 5 },
+      audio: false,
+      preferCurrentTab: true, // Chrome / Edge: offer this tab first
+      selfBrowserSurface: "include",
+      surfaceSwitching: "exclude",
+    });
+    const video = document.createElement("video");
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+    await video.play();
+    await sleep(500); // let the first frames arrive (and the picker close)
+    if (!video.videoWidth) return null;
+    const scale = Math.min(1, MAX_SCREENSHOT_WIDTH / video.videoWidth);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch {
+    return null;
+  } finally {
+    stream?.getTracks().forEach((track) => track.stop());
+  }
+}
+
+// Fallback live session photo: the client's and the RM's video side by side,
+// with the time.
+async function composeSession(remoteVideo, localStream) {
+  if (!remoteVideo?.videoWidth) return null;
+  const own = document.createElement("video");
+  own.muted = true;
+  own.playsInline = true;
+  own.srcObject = localStream || null;
+  await own.play().catch(() => {});
+  await sleep(200);
+  const height = 540;
+  const clientWidth = Math.round((remoteVideo.videoWidth / remoteVideo.videoHeight) * height);
+  const rmWidth = own.videoWidth ? Math.round((own.videoWidth / own.videoHeight) * height) : 0;
+  const canvas = document.createElement("canvas");
+  canvas.width = clientWidth + rmWidth;
+  canvas.height = height + 40;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(remoteVideo, 0, 0, clientWidth, height);
+  if (rmWidth) ctx.drawImage(own, clientWidth, 0, rmWidth, height);
+  own.srcObject = null;
+  ctx.fillStyle = "#fff";
+  ctx.font = "16px sans-serif";
+  ctx.fillText(`Client  |  RM  |  ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST`, 12, height + 26);
+  return canvas.toDataURL("image/jpeg", 0.88);
+}
+
 function Detail({ label, value }) {
   return (
     <div>
@@ -145,7 +211,10 @@ export default function RmIpvCall({ token, onClose }) {
 
   const saveFrame = async (doc) => {
     setError("");
-    const image = grabFrame(remoteVideo.current);
+    // the live session photo is the RM's whole call screen; documents are the client's video
+    const image = doc.type === "session_frame"
+      ? (await grabScreen()) || (await composeSession(remoteVideo.current, media.stream))
+      : grabFrame(remoteVideo.current);
     if (!image) {
       setError("The client's video isn't showing yet, so there's nothing to save.");
       return;
