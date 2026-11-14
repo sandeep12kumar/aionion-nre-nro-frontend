@@ -3,6 +3,7 @@ import { Button, ErrorBanner, Header, VideoTile, formatTime, useElapsed } from "
 import { useLocalMedia } from "./useLocalMedia";
 import { STATUS_LABEL, useIpvCall } from "./useIpvCall";
 import { errorMessage, ipvApi } from "./ipvApi";
+import DocumentDetailsEditor from "./DocumentDetailsEditor";
 
 // A JPEG of the client's video as it is now (full camera resolution).
 function grabFrame(video) {
@@ -67,6 +68,9 @@ export default function RmIpvCall({ token, onClose }) {
   const [loadError, setLoadError] = useState("");
   const [location, setLocation] = useState(null);
   const [saved, setSaved] = useState({});
+  const [documentDetails, setDocumentDetails] = useState({});
+  const [ocrWarnings, setOcrWarnings] = useState({});
+  const [editingDetails, setEditingDetails] = useState({});
   const [thumbs, setThumbs] = useState({});
   const [open, setOpen] = useState(null);
   const [asked, setAsked] = useState(null);
@@ -82,6 +86,7 @@ export default function RmIpvCall({ token, onClose }) {
       setSession(data);
       setLocation(data.location);
       setSaved(data.saved || {});
+      setDocumentDetails(data.documentDetails || {});
       setStartedAt(data.startedAt);
       setRemarks(data.remarks || "");
       if (data.status === "completed" || data.status === "cancelled") onClose(data.status);
@@ -130,12 +135,38 @@ export default function RmIpvCall({ token, onClose }) {
       setSaved((s) => ({ ...s, [doc.type]: { capturedAt: data.capturedAt } }));
       setThumbs((t) => ({ ...t, [doc.type]: image }));
       setAsked(null);
-      const next = session.documents.find((d) => d.type !== doc.type && !saved[d.type]);
-      setOpen(next?.type || null);
+      if (doc.type === "passport_front" || doc.type === "pan_card") {
+        setOpen(doc.type);
+        setDocumentDetails(current => ({ ...current, [doc.type]: { number: "", name: "", date: "" } }));
+        setOcrWarnings(current => ({ ...current, [doc.type]: null }));
+        try {
+          const result = await api.post("/ipv/document-ocr", { docType: doc.type });
+          setDocumentDetails(current => ({ ...current, [doc.type]: result.data.details }));
+          setOcrWarnings(current => ({ ...current, [doc.type]: result.data.warning }));
+        } catch (err) {
+          setOcrWarnings(current => ({ ...current, [doc.type]: errorMessage(err, "Image saved. OCR failed; use Edit values to enter the details.") }));
+        }
+      } else {
+        const next = session.documents.find((d) => d.type !== doc.type && !saved[d.type]);
+        setOpen(next?.type || null);
+      }
     } catch (err) {
       setError(errorMessage(err, "This frame couldn't be saved. Please try again."));
     } finally {
       setSavingType(null);
+    }
+  };
+
+  const saveDetails = async (type, values) => {
+    setError("");
+    try {
+      const { data } = await api.patch("/ipv/document-details", { docType: type, details: values });
+      setDocumentDetails(current => ({ ...current, [type]: data.details }));
+      setOcrWarnings(current => ({ ...current, [type]: null }));
+      return true;
+    } catch (err) {
+      setError(errorMessage(err, "Unable to save edited values."));
+      return false;
     }
   };
 
@@ -238,13 +269,18 @@ export default function RmIpvCall({ token, onClose }) {
                   {isOpen && (
                     <div className="space-y-3 px-4 pb-4 pl-12">
                       <p className="text-xs text-slate-500">{doc.instruction}</p>
+                      {isSaved && (doc.type === "passport_front" || doc.type === "pan_card") && (
+                        <DocumentDetailsEditor type={doc.type} value={documentDetails[doc.type]} reading={savingType === doc.type}
+                          warning={ocrWarnings[doc.type]} onSave={(values) => saveDetails(doc.type, values)}
+                          onEditing={(editing) => setEditingDetails(current => ({ ...current, [doc.type]: editing }))} />
+                      )}
                       {thumbs[doc.type] && <img src={thumbs[doc.type]} alt={`${doc.label} as saved`} className="max-h-40 rounded-lg border border-slate-200" />}
                       {isSaved && !thumbs[doc.type] && <p className="text-xs text-emerald-700">Saved {formatTime(saved[doc.type].capturedAt)}</p>}
                       <div className="flex flex-wrap gap-2">
                         <Button variant="outline" small onClick={() => askToShow(doc)} disabled={!connected}>
                           {asked === doc.type ? "Asked — ask again" : "Ask client to show"}
                         </Button>
-                        <Button small onClick={() => saveFrame(doc)} disabled={!connected || savingType === doc.type}>
+                        <Button small onClick={() => saveFrame(doc)} disabled={!connected || Boolean(savingType) || Object.values(editingDetails).some(Boolean)}>
                           {savingType === doc.type ? "Saving…" : isSaved ? "Save again" : "Save frame"}
                         </Button>
                       </div>
@@ -265,9 +301,10 @@ export default function RmIpvCall({ token, onClose }) {
               placeholder="Anything to note about this verification"
             />
             <ErrorBanner message={error} />
-            <Button className="w-full" onClick={() => finish("complete")} disabled={busy || !allSaved || !location}>
+            <Button className="w-full" onClick={() => finish("complete")} disabled={busy || !allSaved || !location || Boolean(savingType) || Object.values(editingDetails).some(Boolean)}>
               {busy ? "Completing…" : "Complete IPV"}
             </Button>
+            {Object.values(editingDetails).some(Boolean) && <p className="text-xs text-amber-700">Save or cancel the edited OCR values before completing IPV.</p>}
             {!allSaved && <p className="text-xs text-slate-500">Save all {docs.length} documents to complete the IPV.</p>}
             {allSaved && !location && <p className="text-xs text-slate-500">The client's location hasn't been recorded yet.</p>}
           </div>
