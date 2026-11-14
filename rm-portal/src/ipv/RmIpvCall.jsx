@@ -6,14 +6,48 @@ import { errorMessage, ipvApi } from "./ipvApi";
 import DocumentDetailsEditor from "./DocumentDetailsEditor";
 import { useCallRecorder } from "./useCallRecorder";
 
-// A JPEG of the client's video as it is now (full camera resolution).
-function grabFrame(video) {
+// Video frames vary in sharpness (focus hunting, the card moving, compression),
+// so for a document a few frames are taken over about a second and the
+// sharpest kept -- judged by the variance of the Laplacian (edge contrast).
+function sharpness(canvas) {
+  const w = Math.min(480, canvas.width);
+  const h = Math.round((canvas.height / canvas.width) * w);
+  const small = document.createElement("canvas");
+  small.width = w;
+  small.height = h;
+  const ctx = small.getContext("2d");
+  ctx.drawImage(canvas, 0, 0, w, h);
+  const d = ctx.getImageData(0, 0, w, h).data;
+  const g = new Float32Array(w * h);
+  for (let i = 0; i < g.length; i++) g[i] = 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+  let sum = 0;
+  let sumSq = 0;
+  let n = 0;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const lap = 4 * g[i] - g[i - 1] - g[i + 1] - g[i - w] - g[i + w];
+      sum += lap;
+      sumSq += lap * lap;
+      n++;
+    }
+  }
+  return n ? sumSq / n - (sum / n) ** 2 : 0;
+}
+
+async function grabSharpestFrame(video, tries = 6, gapMs = 180) {
   if (!video?.videoWidth) return null;
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-  return canvas.toDataURL("image/jpeg", 0.9);
+  let best = null;
+  for (let i = 0; i < tries; i++) {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    const score = sharpness(canvas);
+    if (!best || score > best.score) best = { canvas, score };
+    if (i < tries - 1) await sleep(gapMs);
+  }
+  return best.canvas.toDataURL("image/jpeg", 0.92);
 }
 
 const MAX_SCREENSHOT_WIDTH = 1920;
@@ -214,7 +248,7 @@ export default function RmIpvCall({ token, onClose }) {
     // the live session photo is the RM's whole call screen; documents are the client's video
     const image = doc.type === "session_frame"
       ? (await grabScreen()) || (await composeSession(remoteVideo.current, media.stream))
-      : grabFrame(remoteVideo.current);
+      : await grabSharpestFrame(remoteVideo.current);
     if (!image) {
       setError("The client's video isn't showing yet, so there's nothing to save.");
       return;

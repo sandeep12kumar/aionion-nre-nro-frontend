@@ -33,10 +33,14 @@ export function useLocalMedia() {
       return null;
     }
     try {
+      // full HD where the camera has it: the RM reads the client's documents
+      // off this video (the IPV OCR works on the frames saved from it)
       const next = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: { echoCancellation: true, noiseSuppression: true },
       });
+      // keep text sharp rather than motion smooth
+      next.getVideoTracks().forEach((t) => { if ("contentHint" in t) t.contentHint = "detail"; });
       current.current?.getTracks().forEach((t) => t.stop());
       current.current = next;
       next.getAudioTracks().forEach((t) => { t.enabled = micOn; });

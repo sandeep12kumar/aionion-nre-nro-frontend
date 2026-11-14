@@ -14,6 +14,25 @@ export const STATUS_LABEL = {
 };
 
 const POLL_MS = 1000;
+
+// The client shows documents to the camera: when the connection is weak,
+// keep the picture's resolution (text stays readable) and lower the frame
+// rate instead, and allow a higher bitrate. Best effort -- browsers that
+// don't support it carry on with their defaults.
+function sharpenVideo(conn) {
+  for (const sender of conn.getSenders()) {
+    if (sender.track?.kind !== "video") continue;
+    try {
+      const params = sender.getParameters();
+      if (!params.encodings?.length) continue;
+      params.degradationPreference = "maintain-resolution";
+      params.encodings[0].maxBitrate = 2_500_000;
+      sender.setParameters(params).catch(() => {});
+    } catch {
+      /* not supported */
+    }
+  }
+}
 const randomId = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -61,7 +80,10 @@ export function useIpvCall({ token, role, localStream, active, onEvent }) {
     conn.onconnectionstatechange = () => {
       if (pc.current !== conn) return;
       const state = conn.connectionState;
-      if (state === "connected") setStatus("connected");
+      if (state === "connected") {
+        setStatus("connected");
+        sharpenVideo(conn);
+      }
       else if (state === "disconnected") setStatus("reconnecting");
       else if (state === "failed") {
         setStatus("reconnecting");
