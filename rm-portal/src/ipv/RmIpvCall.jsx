@@ -4,6 +4,7 @@ import { useLocalMedia } from "./useLocalMedia";
 import { STATUS_LABEL, useIpvCall } from "./useIpvCall";
 import { errorMessage, ipvApi } from "./ipvApi";
 import DocumentDetailsEditor from "./DocumentDetailsEditor";
+import { useCallRecorder } from "./useCallRecorder";
 
 // A JPEG of the client's video as it is now (full camera resolution).
 function grabFrame(video) {
@@ -105,6 +106,7 @@ export default function RmIpvCall({ token, onClose }) {
   const onEvent = useCallback((event, data) => {
     if (event === "location") setLocation((current) => ({ ...current, ...data, recordedAt: new Date().toISOString() }));
     if (event === "session:ended") {
+      recorderRef.current?.stop();
       media.stop();
       onClose(data?.status || "cancelled");
     }
@@ -115,6 +117,25 @@ export default function RmIpvCall({ token, onClose }) {
   useEffect(() => {
     if (connected && !startedAt) setStartedAt(new Date().toISOString());
   }, [connected, startedAt]);
+
+  // The call is recorded from the moment the client's video connects until
+  // the RM completes, ends or leaves the IPV (client/IPV/live_video).
+  const recorder = useCallRecorder({ api, remoteVideo, remoteStream: call.remoteStream, localStream: media.stream });
+  const recorderRef = useRef(recorder);
+  recorderRef.current = recorder;
+  const recordingStarted = useRef(false);
+  useEffect(() => {
+    if (connected && !recordingStarted.current) {
+      recordingStarted.current = true;
+      recorder.start();
+    }
+  }, [connected, recorder]);
+  const leave = async () => {
+    setBusy(true);
+    await recorder.stop();
+    media.stop();
+    onClose(null);
+  };
   const timer = useElapsed(startedAt);
 
   const askToShow = (doc) => {
@@ -175,6 +196,8 @@ export default function RmIpvCall({ token, onClose }) {
     setBusy(true);
     setError("");
     try {
+      // the recording is saved first, so the report records it
+      await recorder.stop();
       await api.post(kind === "complete" ? "/ipv/complete" : "/ipv/cancel", { remarks });
       media.stop();
       onClose(kind === "complete" ? "completed" : "cancelled");
@@ -209,10 +232,15 @@ export default function RmIpvCall({ token, onClose }) {
         right={(
           <div className="flex items-center gap-3">
             <span ref={timer} className="font-mono text-sm font-semibold text-slate-700">00:00</span>
+            {recorder.recording && (
+              <span className="flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-white" /> Recording
+              </span>
+            )}
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ${connected ? "bg-emerald-50 text-emerald-700" : "bg-indigo-50 text-brand-blue"}`}>
               {STATUS_LABEL[call.status]}
             </span>
-            <Button variant="outline" small onClick={() => { media.stop(); onClose(null); }} disabled={busy}>Leave call</Button>
+            <Button variant="outline" small onClick={leave} disabled={busy}>Leave call</Button>
             <Button variant="danger" small onClick={() => finish("cancel")} disabled={busy}>End IPV</Button>
           </div>
         )}
@@ -237,7 +265,7 @@ export default function RmIpvCall({ token, onClose }) {
             <Button variant="outline" small onClick={media.toggleCamera}>{media.cameraOn ? "Camera off" : "Camera on"}</Button>
             <span className="text-xs text-slate-500">{call.peerOnline ? "Client is online" : "Client is not on the call"}</span>
           </div>
-          <ErrorBanner message={media.error || call.error} />
+          <ErrorBanner message={media.error || call.error || recorder.error} />
           {media.error && <Button variant="outline" small onClick={() => media.start("user")}>Try again</Button>}
           <LocationPanel location={location} />
         </div>

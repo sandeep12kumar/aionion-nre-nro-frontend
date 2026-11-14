@@ -33,6 +33,7 @@ export default function ClientIpvCall({ token, documents, onEnded, onClose }) {
   const [error, setError] = useState("");
   const [request, setRequest] = useState(null);
   const [captured, setCaptured] = useState(null);
+  const [recording, setRecording] = useState(false);
 
   const onEvent = useCallback((event, data) => {
     if (event === "doc:request") {
@@ -42,7 +43,8 @@ export default function ClientIpvCall({ token, documents, onEnded, onClose }) {
     else if (event === "doc:captured") {
       setRequest(null);
       setCaptured(data?.label || "Document");
-    } else if (event === "session:ended") {
+    } else if (event === "recording:state") setRecording(Boolean(data?.recording));
+    else if (event === "session:ended") {
       media.stop();
       onEnded(data?.status || "cancelled");
     }
@@ -86,7 +88,7 @@ export default function ClientIpvCall({ token, documents, onEnded, onClose }) {
       <div className="space-y-4">
         <p className="text-sm text-slate-600">
           By continuing, you agree to share your camera, microphone and current location with Aionion Capital for this
-          verification. Your location is recorded with the IPV.
+          verification. The video call is recorded, and the recording and your location are kept with the IPV.
         </p>
         <ErrorBanner message={error || media.error} />
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -112,6 +114,11 @@ export default function ClientIpvCall({ token, documents, onEnded, onClose }) {
       <div className="relative min-h-0 min-w-0 overflow-hidden">
         <VideoTile stream={media.stream} muted mirrored={media.facing === "user"} label="Your video" className="absolute inset-0 h-full w-full !object-contain" />
         <span className="absolute bottom-3 left-3 rounded bg-black/60 px-2 py-1 text-xs font-semibold">You</span>
+        {recording && (
+          <span className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold" role="status">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-white" /> Recording
+          </span>
+        )}
         {!media.cameraOn && <p className="absolute inset-0 flex items-center justify-center text-sm">Your camera is off</p>}
         <div className="absolute right-3 top-3 w-28 overflow-hidden rounded-xl border border-white/30 bg-slate-900 shadow-lg sm:w-48 lg:w-56">
           <VideoTile stream={call.remoteStream} label="Relationship Manager" className="aspect-video w-full" />

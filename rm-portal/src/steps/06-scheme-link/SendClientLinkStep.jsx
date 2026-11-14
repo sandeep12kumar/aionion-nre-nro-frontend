@@ -34,6 +34,7 @@ export default function SendClientLinkStep({ onBack }) {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [ipvInfo, setIpvInfo] = useState(null);
 
   useEffect(() => {
     if (!panNumber) return;
@@ -76,7 +77,12 @@ export default function SendClientLinkStep({ onBack }) {
     navigate(`${getBasePath()}/aadhaar`);
   };
 
+  const linkSent = Boolean(result || identity?.client_link_sent_at);
+  // with video IPV on, the RM stays on this page until the IPV is completed
+  const canStartNew = linkSent && ipvInfo && (!ipvInfo.enabled || ipvInfo.status === "completed");
+
   return (
+    <>
     <Card className="p-8">
       <div>
         <p className="text-xs font-semibold tracking-wide text-pink-500">HAND OVER TO CLIENT</p>
@@ -139,8 +145,23 @@ export default function SendClientLinkStep({ onBack }) {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         {/* the client's video IPV continues here, once the link has gone out */}
-        {(result || identity?.client_link_sent_at) && <IpvPanel panNumber={panNumber} onStartNew={startNew} />}
+        {linkSent && <IpvPanel panNumber={panNumber} onStatus={setIpvInfo} />}
       </div>
     </Card>
+
+    {canStartNew && (
+      <Card className="mt-6 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-bold text-slate-900">Done with this client?</p>
+          <p className="mt-0.5 text-sm text-slate-500">
+            Start onboarding the next client. This client's application stays saved, and they can still use their link.
+          </p>
+        </div>
+        <Button className="shrink-0 justify-center" onClick={startNew}>
+          Start a new application →
+        </Button>
+      </Card>
+    )}
+    </>
   );
 }
