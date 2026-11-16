@@ -1,7 +1,8 @@
 import { STEPS, stepIndex } from "../../steps/stepsConfig";
-import { IdCardIcon, BankIcon, UsersIcon, CardIcon, UserIcon, GlobeIcon, DocumentIcon } from "../ui/icons";
+import { IdCardIcon, BankIcon, UsersIcon, CardIcon, UserIcon, GlobeIcon, DocumentIcon, CameraIcon } from "../ui/icons";
 
 const STEP_ICONS = {
+  ipv: CameraIcon,
   account_type: GlobeIcon,
   aadhaar: UserIcon,
   identity_contact: IdCardIcon,
@@ -24,7 +25,7 @@ export default function StepSidebar({ currentStepId }) {
           {STEPS.map((step, index) => {
             const isDone = index < currentIndex;
             const isActive = index === currentIndex;
-            const Icon = STEP_ICONS[step.id];
+            const Icon = STEP_ICONS[step.id] || DocumentIcon;
 
             return (
               <li
