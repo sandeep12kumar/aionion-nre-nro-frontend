@@ -27,7 +27,7 @@ const ACCOUNT_TYPES = [
   },
 ];
 
-// First RM step after login (/account-type): NRE or NRO decides the /nre or
+// The RM's step after the video IPV (/account-type): NRE or NRO decides the /nre or
 // /nro flow that follows, starting with the Aadhaar check.
 export default function AccountTypeStep() {
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ export default function AccountTypeStep() {
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <StepFooter onBack={() => navigate("/")} submitLabel="Continue" />
+          <StepFooter onBack={() => navigate("/ipv")} submitLabel="Continue" />
         </form>
       </Card>
     </OnboardingShell>

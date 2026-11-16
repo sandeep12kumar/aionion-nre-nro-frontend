@@ -5,26 +5,12 @@ const PAN_NUMBER_KEY = "client_pan_number";
 const ACCOUNT_TYPE_KEY = "client_account_type";
 const HAS_AADHAAR_KEY = "client_has_aadhaar";
 const LINK_TOKEN_KEY = "client_link_token";
-const IPV_REQUIRED_KEY = "client_ipv_required";
 
-export function setClientSession({ token, panNumber, accountType, hasAadhaar, ipvRequired }) {
+export function setClientSession({ token, panNumber, accountType, hasAadhaar }) {
   localStorage.setItem(LINK_TOKEN_KEY, token);
   localStorage.setItem(PAN_NUMBER_KEY, panNumber);
   localStorage.setItem(HAS_AADHAAR_KEY, hasAadhaar ? "yes" : "no");
-  localStorage.setItem(IPV_REQUIRED_KEY, ipvRequired ? "yes" : "no");
   setAccountType(accountType);
-}
-
-// true -> the Video IPV step comes between Live photo and E-sign (the
-// server's IPV_ENABLED switch, read when the link is opened).
-export function getIpvRequired() {
-  return localStorage.getItem(IPV_REQUIRED_KEY) === "yes";
-}
-
-// The server said the IPV is still needed (e.g. it was switched on after this
-// link was opened): show the step from now on.
-export function markIpvRequired() {
-  localStorage.setItem(IPV_REQUIRED_KEY, "yes");
 }
 
 // RequireLogin (components/layout/RequireLogin.jsx) checks this on every
@@ -75,12 +61,11 @@ export function getPanNumber() {
 // Maps where the client left off (see clientLinkController.resolveClientLink)
 // to the step that picks up from there. current_step is 'scheme_payment'
 // until payment succeeds, then 'review_sign' until submission ('done').
-export function resumeStepPath({ currentStep, status, hasLivePhoto, hasAadhaar, esignStatus, ipvRequired, ipvStatus }) {
+export function resumeStepPath({ currentStep, status, hasLivePhoto, hasAadhaar, esignStatus }) {
   const basePath = getBasePath();
   if (status === "completed" || currentStep === "done") return `${basePath}/submit`;
   if (currentStep === "review_sign") {
     if (!hasLivePhoto) return `${basePath}/photo`;
-    if (ipvRequired && ipvStatus !== "completed") return `${basePath}/ipv`;
     if (hasAadhaar && esignStatus !== "completed") return `${basePath}/esign`;
     return `${basePath}/submit`;
   }
@@ -92,5 +77,5 @@ export function clearSession() {
   localStorage.removeItem(ACCOUNT_TYPE_KEY);
   localStorage.removeItem(HAS_AADHAAR_KEY);
   localStorage.removeItem(LINK_TOKEN_KEY);
-  localStorage.removeItem(IPV_REQUIRED_KEY);
+  localStorage.removeItem("client_ipv_required"); // from the earlier IPV step
 }

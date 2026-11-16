@@ -13,6 +13,7 @@ import UploadDropzone from "../../components/ui/UploadDropzone";
 import CapturePrompt from "../../components/ui/CapturePrompt";
 import useIsMobile from "../../hooks/useIsMobile";
 import api from "../../services/api";
+import { ipvApi } from "../../ipv/ipvApi";
 import { viewLocalFile } from "../../services/viewDocument";
 import {
   setPanNumber as storePanNumber,
@@ -22,6 +23,8 @@ import {
   getBasePath,
   getHasAadhaar,
   getRmEmail,
+  getIpv,
+  setIpv,
 } from "../../services/applicationState";
 
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
@@ -45,8 +48,11 @@ async function goToDigilocker(pan) {
 export default function IdentityKraStep({ onNext, onBack }) {
   const isMobile = useIsMobile();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [panNumber, setPanNumber] = useState("");
-  const [dob, setDob] = useState("");
+  // prefilled from what the video IPV read off the PAN card (the RM checks it)
+  const ipv = getIpv();
+  const ipvPan = ipv?.token && PAN_REGEX.test(ipv.ocrPan || "") ? ipv.ocrPan : "";
+  const [panNumber, setPanNumber] = useState(ipvPan);
+  const [dob, setDob] = useState(ipvPan && /^d{4}-d{2}-d{2}$/.test(ipv.ocrDob || "") ? ipv.ocrDob : "");
   const [file, setFile] = useState(null);
   const [panMethod, setPanMethod] = useState("upload");
   const [loading, setLoading] = useState(false);
@@ -185,6 +191,11 @@ export default function IdentityKraStep({ onNext, onBack }) {
       });
 
       storePanNumber(cleanPan);
+      // the completed video IPV (the first step) now belongs to this application
+      if (ipv?.token && !ipv.skipped) {
+        await ipvApi(ipv.token).post("/ipv/link", { panNumber: cleanPan, accountType: getAccountType() });
+        setIpv({ linkedPan: cleanPan });
+      }
       // Cleared so a stale email from an earlier PAN never carries over;
       // DigiLocker's email (if any) is filled in when it comes back.
       setPrefillEmail(null);
@@ -256,6 +267,11 @@ export default function IdentityKraStep({ onNext, onBack }) {
                     setPanNumber(e.target.value.toUpperCase());
                   }}
                 />
+                {ipvPan && PAN_REGEX.test(panNumber.trim()) && panNumber.trim() !== ipvPan && (
+                  <p role="alert" className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 sm:col-span-2">
+                    This PAN doesn't match the PAN card shown in the video IPV ({ipvPan}). Check the PAN before verifying.
+                  </p>
+                )}
                 <Input
                   label="Date of birth"
                   type="date"

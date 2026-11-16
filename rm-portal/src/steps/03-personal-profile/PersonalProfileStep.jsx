@@ -8,7 +8,7 @@ import Button from "../../components/ui/Button";
 import Modal from "../../components/ui/Modal";
 import StepFooter from "../../components/layout/StepFooter";
 import api from "../../services/api";
-import { getPanNumber, getPrefillEmail } from "../../services/applicationState";
+import { getPanNumber, getPrefillEmail, getIpv } from "../../services/applicationState";
 import { COUNTRIES } from "./countries";
 import { DIAL_CODES } from "./dialCodes";
 
@@ -153,7 +153,8 @@ export default function PersonalProfileStep({ onNext, onBack }) {
     if (!panNumber) return;
     api.get(`/identity/${panNumber}`).then(({ data }) => {
       const identity = data.identity;
-      const email = identity?.email || getPrefillEmail();
+      // the email the video IPV link went to, when nothing else is known
+      const email = identity?.email || getPrefillEmail() || getIpv()?.email || "";
       if (!identity?.itr_full_name && !identity?.gender && !email) return;
       setForm((f) => ({
         ...f,

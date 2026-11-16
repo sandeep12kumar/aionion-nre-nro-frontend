@@ -70,7 +70,7 @@ export default function RmLoginStep() {
       const { data } = await api.post("/rm-login/verify-otp", { email, otpCode: otp });
       clearApplication();
       setRmEmail(data.rmEmail || email);
-      navigate("/account-type");
+      navigate("/ipv");
     } catch (err) {
       setError(err.response?.data?.message || "Invalid or expired code.");
     } finally {

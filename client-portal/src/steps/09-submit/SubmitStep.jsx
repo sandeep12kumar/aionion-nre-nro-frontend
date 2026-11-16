@@ -5,7 +5,7 @@ import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { CheckCircleIcon } from "../../components/ui/icons";
 import api from "../../services/api";
-import { getPanNumber, getBasePath, markIpvRequired } from "../../services/applicationState";
+import { getPanNumber } from "../../services/applicationState";
 import { prevStepPath } from "../stepsConfig";
 import happyInvesting from "../../assets/happy-investing.png";
 
@@ -41,11 +41,6 @@ export default function SubmitStep() {
       setClientCode(data.clientCode);
       setSubmitted(true);
     } catch (err) {
-      if (err.response?.data?.missing?.includes("video IPV")) {
-        markIpvRequired();
-        navigate(`${getBasePath()}/ipv`, { replace: true });
-        return;
-      }
       setError(err.response?.data?.message || "Failed to submit your application.");
     } finally {
       setSubmitting(false);

@@ -6,7 +6,6 @@ const STEP_ICONS = {
   verify_email: MailIcon,
   payment: CardIcon,
   photo: CameraIcon,
-  ipv: CameraIcon,
   esign: IdCardIcon,
 };
 

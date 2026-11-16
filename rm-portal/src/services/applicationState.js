@@ -6,6 +6,7 @@ const KRA_BRANCH_KEY = "rm_kra_branch";
 const PREFILL_EMAIL_KEY = "rm_prefill_email";
 const ACCOUNT_TYPE_KEY = "rm_account_type";
 const HAS_AADHAAR_KEY = "rm_has_aadhaar";
+const IPV_KEY = "rm_ipv";
 
 // Set once RmLoginStep verifies the RM's email via OTP. RequireLogin
 // (components/layout/RequireLogin.jsx) checks this on every /:regime/...
@@ -104,6 +105,27 @@ export function getPrefillEmail() {
   return localStorage.getItem(PREFILL_EMAIL_KEY) || "";
 }
 
+// The video IPV -- the RM's first step for each client (steps/00-ipv).
+// { token, id, email, status, ocrPan, skipped } -- token is the RM's call
+// token; skipped means the server's IPV switch is off.
+export function getIpv() {
+  try {
+    return JSON.parse(localStorage.getItem(IPV_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+export function setIpv(values) {
+  localStorage.setItem(IPV_KEY, JSON.stringify({ ...(getIpv() || {}), ...values }));
+}
+
+// The RM may fill the account opening details only after the IPV.
+export function isIpvDone() {
+  const ipv = getIpv();
+  return Boolean(ipv && (ipv.skipped || ipv.status === "completed"));
+}
+
 // Clears the current client's application but keeps the RM signed in --
 // used by "Start over" and "Start a new application".
 export function clearApplication() {
@@ -112,6 +134,7 @@ export function clearApplication() {
   localStorage.removeItem(PREFILL_EMAIL_KEY);
   localStorage.removeItem(ACCOUNT_TYPE_KEY);
   localStorage.removeItem(HAS_AADHAAR_KEY);
+  localStorage.removeItem(IPV_KEY);
   applyRegimeTheme();
 }
 

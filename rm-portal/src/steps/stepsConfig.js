@@ -5,7 +5,16 @@ import { getBasePath, getAccountType } from "../services/applicationState";
 // client-portal (Review, Payment, Live photo, E-sign, PDF & submit).
 export const STEPS = [
   {
-    // First step after RM login; lives at /account-type (no /nre or /nro
+    // The RM's first step for each client: the video IPV, with the client
+    // joining from an emailed link. The details come after it.
+    id: "ipv",
+    path: "/ipv",
+    absolute: true,
+    title: "Video IPV",
+    subtitle: "Client verification on video",
+  },
+  {
+    // After the IPV; lives at /account-type (no /nre or /nro
     // prefix yet, since this is where the regime gets chosen).
     id: "account_type",
     path: "/account-type",

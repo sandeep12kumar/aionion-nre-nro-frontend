@@ -5,8 +5,7 @@ import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import { CheckCircleIcon } from "../../components/ui/icons";
 import api from "../../services/api";
-import IpvPanel from "../../ipv/IpvPanel";
-import { getPanNumber, getHasAadhaar, getBasePath, clearApplication } from "../../services/applicationState";
+import { getPanNumber, getHasAadhaar, clearApplication } from "../../services/applicationState";
 
 const SCHEME_LABELS = { lifeTime: "Life Time Advantage", annualCare: "Annual Care" };
 
@@ -34,7 +33,6 @@ export default function SendClientLinkStep({ onBack }) {
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [ipvInfo, setIpvInfo] = useState(null);
 
   useEffect(() => {
     if (!panNumber) return;
@@ -74,12 +72,10 @@ export default function SendClientLinkStep({ onBack }) {
 
   const startNew = () => {
     clearApplication();
-    navigate(`${getBasePath()}/aadhaar`);
+    navigate("/ipv"); // the next client starts with their video IPV
   };
 
-  const linkSent = Boolean(result || identity?.client_link_sent_at);
-  // with video IPV on, the RM stays on this page until the IPV is completed
-  const canStartNew = linkSent && ipvInfo && (!ipvInfo.enabled || ipvInfo.status === "completed");
+  const canStartNew = Boolean(result || identity?.client_link_sent_at);
 
   return (
     <>
@@ -143,9 +139,6 @@ export default function SendClientLinkStep({ onBack }) {
         )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
-
-        {/* the client's video IPV continues here, once the link has gone out */}
-        {linkSent && <IpvPanel panNumber={panNumber} onStatus={setIpvInfo} />}
       </div>
     </Card>
 

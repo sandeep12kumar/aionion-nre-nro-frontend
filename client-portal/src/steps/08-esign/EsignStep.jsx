@@ -4,7 +4,7 @@ import OnboardingShell from "../../components/layout/OnboardingShell";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import api from "../../services/api";
-import { getPanNumber, getBasePath, markIpvRequired } from "../../services/applicationState";
+import { getPanNumber, getBasePath } from "../../services/applicationState";
 import { prevStepPath } from "../stepsConfig";
 
 // Setu needs the signer's location at sign time.
@@ -88,11 +88,6 @@ export default function EsignStep() {
       }
       if (data.completed) await refreshStatus();
     } catch (err) {
-      if (err.response?.data?.code === "IPV_REQUIRED") {
-        markIpvRequired();
-        navigate(`${getBasePath()}/ipv`, { replace: true });
-        return;
-      }
       setError(err.response?.data?.message || err.message || "Failed to start Aadhaar e-sign.");
     } finally {
       setSigning(false);

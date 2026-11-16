@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import RequireLogin from "./components/layout/RequireLogin";
-import { applyRegimeTheme } from "./services/applicationState";
+import { applyRegimeTheme, isLoggedIn } from "./services/applicationState";
 import RmLoginStep from "./steps/00-rm-login/RmLoginStep";
+import IpvStep from "./steps/00-ipv/IpvStep";
 import AccountTypeStep from "./steps/00-account-type/AccountTypeStep";
 import AadhaarStep from "./steps/00-aadhaar/AadhaarStep";
 import IdentityStep from "./steps/01-identity-kra/IdentityStep";
@@ -12,7 +13,7 @@ import PersonalNomineeStep from "./steps/03-personal-profile/PersonalNomineeStep
 import SchemeLinkStep from "./steps/06-scheme-link/SchemeLinkStep";
 
 // rm-portal: the Relationship Manager's half of the NRI onboarding.
-//   RM Login -> Account type (NRE / NRO) -> Aadhaar check -> Identity & Contact ->
+//   RM Login -> Video IPV (client joins from the emailed link) -> Account type (NRE / NRO) -> Aadhaar check -> Identity & Contact ->
 //   Bank & proofs -> Address proofs -> Personal & Nominee -> Scheme (+ client
 //   signature when no Aadhaar) -> Send link to client.
 // The emailed link opens client-portal, which handles Review, Payment,
@@ -33,6 +34,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<RmLoginStep />} />
+      <Route path="/ipv" element={isLoggedIn() ? <IpvStep /> : <Navigate to="/" replace />} />
       <Route path="/account-type" element={<RequireLogin><AccountTypeStep /></RequireLogin>} />
       <Route path="/:regime/aadhaar" element={<RequireLogin><AadhaarStep /></RequireLogin>} />
       <Route path="/:regime/identity" element={<RequireLogin requireAadhaar><IdentityStep /></RequireLogin>} />
