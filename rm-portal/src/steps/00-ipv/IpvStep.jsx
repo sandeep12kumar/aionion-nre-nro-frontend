@@ -148,7 +148,7 @@ export default function IpvStep() {
       setBusy(false);
     }
   };
-  const fileStem = session?.linkedPan || `IPV-${ipv?.id}`;
+  const fileStem = session?.linkedPan || session?.documentDetails?.pan_card?.number || `IPV-${ipv?.id}`;
 
   if (enabled !== true) {
     return (
@@ -208,12 +208,14 @@ export default function IpvStep() {
                 onClick={() => download(() => downloadIpvReport(token, fileStem), "The report couldn't be downloaded.")}>
                 Download IPV report (PDF)
               </button>
-              {Array.from({ length: session?.recordings || 0 }, (_, i) => (
-                <button key={i} type="button" className="text-sm font-semibold text-brand-blue disabled:opacity-50" disabled={busy}
-                  onClick={() => download(() => downloadIpvRecording(token, fileStem, i + 1), "The recording couldn't be downloaded.")}>
-                  Download call recording{session.recordings > 1 ? ` (part ${i + 1})` : ""}
+              {/* recordings: [{ segment, size, ... }] -- one per time the RM joined the call */}
+              {(session?.recordings || []).map((recording, i, all) => (
+                <button key={recording.segment} type="button" className="text-sm font-semibold text-brand-blue disabled:opacity-50" disabled={busy}
+                  onClick={() => download(() => downloadIpvRecording(token, fileStem, recording.segment), "The recording couldn't be downloaded.")}>
+                  Download video call recording{all.length > 1 ? ` (part ${i + 1})` : ""}
                 </button>
               ))}
+              {session && !session.recordings?.length && <span className="text-sm text-slate-400">No call recording saved</span>}
             </div>
             <div className="mt-6 flex justify-center">
               <Button className="justify-center" onClick={() => navigate("/account-type")}>

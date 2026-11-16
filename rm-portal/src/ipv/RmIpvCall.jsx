@@ -51,6 +51,10 @@ async function grabSharpestFrame(video, tries = 6, gapMs = 180) {
 }
 
 const MAX_SCREENSHOT_WIDTH = 1920;
+const DETAIL_LABELS = {
+  passport_front: { number: "Passport number", name: "Passport name", date: "Passport expiry date" },
+  pan_card: { number: "PAN number", name: "PAN card name", date: "PAN card date of birth" },
+};
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // The live session photo: a screenshot of the RM's own call screen (client
@@ -326,6 +330,10 @@ export default function RmIpvCall({ token, onClose }) {
   const docs = session.documents;
   const savedCount = docs.filter((d) => saved[d.type]).length;
   const allSaved = savedCount === docs.length;
+  // the passport and PAN card details are required: typed in (Edit values) where the OCR missed them
+  const missingDetails = Object.entries(DETAIL_LABELS).flatMap(([type, labels]) =>
+    Object.entries(labels).filter(([key]) => !String(documentDetails[type]?.[key] || "").trim()).map(([, label]) => label));
+  const detailsMissingFor = (type) => Boolean(saved[type]) && Object.keys(DETAIL_LABELS[type] || {}).some((key) => !String(documentDetails[type]?.[key] || "").trim());
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-50">
@@ -394,7 +402,9 @@ export default function RmIpvCall({ token, onClose }) {
                       {isSaved ? "✓" : ""}
                     </span>
                     <span className="flex-1 text-sm font-semibold text-slate-900">{i + 1}. {doc.label}</span>
-                    {isSaved && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Saved</span>}
+                    {isSaved && detailsMissingFor(doc.type) && savingType !== doc.type
+                      ? <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Details missing</span>
+                      : isSaved && <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Saved</span>}
                     <span className="text-slate-400">{isOpen ? "▴" : "▾"}</span>
                   </button>
                   {isOpen && (
@@ -432,11 +442,16 @@ export default function RmIpvCall({ token, onClose }) {
               placeholder="Anything to note about this verification"
             />
             <ErrorBanner message={error} />
-            <Button className="w-full" onClick={() => finish("complete")} disabled={busy || !allSaved || !location || Boolean(savingType) || Object.values(editingDetails).some(Boolean)}>
+            <Button className="w-full" onClick={() => finish("complete")} disabled={busy || !allSaved || !location || missingDetails.length > 0 || Boolean(savingType) || Object.values(editingDetails).some(Boolean)}>
               {busy ? "Completing…" : "Complete IPV"}
             </Button>
             {Object.values(editingDetails).some(Boolean) && <p className="text-xs text-amber-700">Save or cancel the edited OCR values before completing IPV.</p>}
             {!allSaved && <p className="text-xs text-slate-500">Save all {docs.length} documents to complete the IPV.</p>}
+            {allSaved && !savingType && missingDetails.length > 0 && (
+              <p className="text-xs text-amber-700">
+                The OCR couldn't read: {missingDetails.join(", ")}. Open the passport / PAN card above and use <b>Edit values</b> to fill them in.
+              </p>
+            )}
             {allSaved && !location && <p className="text-xs text-slate-500">The client's location hasn't been recorded yet.</p>}
           </div>
         </section>
