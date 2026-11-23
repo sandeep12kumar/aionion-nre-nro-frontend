@@ -41,14 +41,15 @@ export default function IpvLinkPage() {
   const open = status === "requested" || status === "live";
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="flex items-center border-b border-slate-100 bg-white px-4 py-3 lg:px-8 lg:py-4">
+    <div className="app-bg min-h-screen">
+      <div className="brand-strip" />
+      <header className="sticky top-0 z-30 flex items-center border-b border-slate-200/60 bg-white/80 px-4 py-3 backdrop-blur-md lg:px-8">
         <img src={logo} alt="Aionion Capital" className="h-9 lg:h-11" />
       </header>
       <main className="mx-auto max-w-2xl px-4 py-8">
         <Card className="p-8">
-          <p className="text-xs font-semibold tracking-wide text-pink-500">VIDEO IPV</p>
-          <h2 className="mt-1 text-2xl font-bold text-slate-900">Video verification with your RM</h2>
+          <span className="inline-flex items-center gap-2 rounded-full bg-[var(--regime-soft)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--regime-color)]"><span className="h-1.5 w-1.5 rounded-full bg-[var(--regime-color)]" />Video IPV</span>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">Video verification with your RM</h2>
 
           {loading ? (
             <p className="mt-6 text-sm text-slate-500">Opening your video IPV…</p>

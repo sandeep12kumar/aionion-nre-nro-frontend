@@ -85,26 +85,58 @@ export default function RmLoginStep() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10">
+    <div className="app-bg relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
       {/* Soft brand-color glow behind the card -- purely decorative. */}
-      <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-brand-blue/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-pink-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-blue/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-brand-pink/15 blur-3xl" />
 
-      <div className="relative w-full max-w-md">
-        <div className="mb-6 text-center">
-          <p className="text-sm font-semibold tracking-wide text-pink-500">NRI ONBOARDING · RELATIONSHIP MANAGER</p>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900 lg:text-3xl">RM Login</h1>
+      <div className="relative grid w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-lift lg:grid-cols-[1.05fr_1fr]">
+        {/* brand panel (desktop) */}
+        <div className="relative hidden flex-col justify-between gap-10 overflow-hidden bg-brand-navy p-10 text-white lg:flex">
+          <div aria-hidden="true" className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-brand-blue opacity-60 blur-3xl" />
+          <div aria-hidden="true" className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-brand-pink opacity-50 blur-3xl" />
+          <div className="relative">
+            <span className="inline-flex rounded-2xl bg-white px-4 py-2.5 shadow-lg">
+              <img src={logo} alt="Aionion Capital" className="h-11" />
+            </span>
+          </div>
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">NRI onboarding</p>
+            <h2 className="mt-3 text-3xl font-bold leading-tight">
+              Open NRE &amp; NRO accounts for your clients — <span className="text-brand-pink">end to end.</span>
+            </h2>
+            <ul className="mt-8 space-y-4 text-sm text-white/85">
+              {[
+                ["Video IPV", "Verify the client face to face, wherever they are"],
+                ["Guided steps", "PAN, DigiLocker, bank proofs, nominees and scheme"],
+                ["One link", "The client reviews, pays, takes a live photo and signs"],
+              ].map(([title, text]) => (
+                <li key={title} className="flex gap-3">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs">✓</span>
+                  <span>
+                    <span className="font-semibold text-white">{title}</span>
+                    <span className="block text-white/65">{text}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="relative text-xs tracking-[0.25em] text-white/50">RESEARCH | TRUST | FOREVER</p>
         </div>
 
-        <Card className="overflow-hidden">
-          <div className="h-1.5 bg-brand-gradient" />
+        <Card className="overflow-hidden rounded-none border-0 shadow-none">
+          <div className="h-1.5 bg-brand-gradient lg:hidden" />
 
-          <div className="p-8">
-            <div className="flex justify-center">
-              <img src={logo} alt="Aionion Capital" className="h-16" />
+          <div className="p-8 sm:p-10">
+            <div className="text-center lg:text-left">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand-pink">Relationship Manager</p>
+              <h1 className="mt-1 text-2xl font-bold text-slate-900 lg:text-3xl">RM Login</h1>
+            </div>
+            <div className="mt-6 flex justify-center lg:hidden">
+              <img src={logo} alt="Aionion Capital" className="h-14" />
             </div>
 
-            <div className="mt-5 text-center">
+            <div className="mt-5 text-center lg:text-left">
               <p className="text-sm font-semibold text-slate-700">Sign in with your RM email</p>
               <p className="mt-1.5 text-sm text-slate-500">
                 We'll send a one-time code to verify it's you. You'll then fill in the client's details and send them
@@ -165,10 +197,11 @@ export default function RmLoginStep() {
 
               {error && <p className="text-sm text-red-500">{error}</p>}
 
-              <Button type="submit" className="w-full justify-center bg-brand-gradient" disabled={loading}>
+              <Button type="submit" className="w-full justify-center bg-brand-gradient py-3" disabled={loading}>
                 {loading ? "Please wait…" : locked ? "Verify & continue →" : "Send code"}
               </Button>
             </form>
+            <p className="mt-6 text-center text-xs text-slate-400 lg:text-left">🔒 The code is valid for 10 minutes and works only once.</p>
           </div>
         </Card>
       </div>

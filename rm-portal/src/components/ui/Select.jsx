@@ -8,7 +8,7 @@ export default function Select({ label, required, options, className = "", ...pr
         </label>
       )}
       <select
-        className="w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-blue focus:ring-1 focus:ring-brand-blue"
+        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-300 focus:border-[var(--regime-color)]"
         {...props}
       >
         <option value="">Select</option>

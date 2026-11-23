@@ -12,6 +12,23 @@ const base = {
   strokeLinejoin: "round",
 };
 
+export function CheckIcon(props) {
+  return (
+    <svg {...base} strokeWidth={2.5} {...props}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+export function LockIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
+}
+
 export function GlobeIcon(props) {
   return (
     <svg {...base} {...props}>

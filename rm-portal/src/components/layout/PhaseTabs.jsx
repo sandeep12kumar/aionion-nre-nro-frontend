@@ -11,7 +11,7 @@ export default function PhaseTabs({ phases, activeIndex }) {
             <span
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ${
                 isActive
-                  ? "bg-[var(--regime-color)] text-white"
+                  ? "bg-[var(--regime-color)] text-white shadow-[0_8px_18px_-8px_var(--regime-color)]"
                   : isDone
                     ? "bg-emerald-50 text-emerald-600"
                     : "bg-slate-100 text-slate-400"

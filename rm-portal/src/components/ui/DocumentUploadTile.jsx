@@ -70,11 +70,11 @@ export default function DocumentUploadTile({
   };
 
   return (
-    <div className="min-w-0 rounded-xl border border-dashed border-slate-200 p-3 sm:p-4">
+    <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 transition hover:border-[color:color-mix(in_srgb,var(--regime-color)_40%,white)] hover:shadow-sm sm:p-4">
     <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm ${fileName ? "bg-emerald-50 text-emerald-600" : "bg-indigo-50 text-indigo-500"}`}
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm ${fileName ? "bg-emerald-50 text-emerald-600" : "bg-[var(--regime-soft)] text-[var(--regime-color)]"}`}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-[18px] w-[18px] shrink-0">
             {fileName ? <path d="m5 12 4 4L19 6" /> : <path d="M12 19V5m-5 5 5-5 5 5" />}

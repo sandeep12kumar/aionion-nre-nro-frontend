@@ -1,94 +1,94 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import logo from "../../assets/aionion-logo.png";
 import StepSidebar from "./StepSidebar";
 import MobileStepNav from "./MobileStepNav";
-import { progressPercent } from "../../steps/stepsConfig";
+import { STEPS, progressPercent, stepIndex } from "../../steps/stepsConfig";
 import { getRmEmail, clearSession } from "../../services/applicationState";
+import { LockIcon } from "../ui/icons";
 
+// Every RM page after login: header, the progress band, the step timeline
+// (desktop) / step bar (mobile), the page, and a small footer.
+// eslint-disable-next-line no-unused-vars
 export default function OnboardingShell({ currentStepId, kraBranch, children }) {
   const navigate = useNavigate();
   const rmEmail = getRmEmail();
   const { regime } = useParams();
   const accountType = regime?.toUpperCase();
   const percent = progressPercent(currentStepId);
-  const [previewBranch, setPreviewBranch] = useState(kraBranch || "not_found");
+  const stepNumber = Math.max(stepIndex(currentStepId), 0) + 1;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 lg:px-8 lg:py-4">
+    <div className="app-bg flex min-h-screen flex-col">
+      <div className="brand-strip" />
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200/60 bg-white/80 px-4 py-3 backdrop-blur-md lg:px-8">
         <img src={logo} alt="Aionion Capital" className="h-9 lg:h-11" />
-        <div className="flex items-center gap-6 text-sm text-slate-500">
-          {rmEmail && (
-            <>
-              <span className="hidden sm:inline">
-                RM: <span className="font-semibold text-slate-700">{rmEmail}</span>
+        {rmEmail && (
+          <div className="flex items-center gap-3 text-sm">
+            <span className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 sm:flex">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-gradient text-xs font-bold text-white">
+                {rmEmail.charAt(0)}
               </span>
-              <button
-                type="button"
-                className="font-semibold text-brand-blue"
-                onClick={() => {
-                  clearSession();
-                  navigate("/");
-                }}
-              >
-                Sign out
-              </button>
-            </>
-          )}
-        </div>
+              <span className="max-w-[16rem] truncate text-xs font-semibold text-slate-700">{rmEmail}</span>
+            </span>
+            <button
+              type="button"
+              className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+              onClick={() => {
+                clearSession();
+                navigate("/");
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+        )}
       </header>
 
-      <div className="border-b border-slate-100 bg-white px-4 pb-4 pt-4 lg:px-8 lg:pb-6 lg:pt-5">
-        <p className="text-sm font-semibold tracking-wide text-pink-500">
-          NRI ONBOARDING{accountType === "NRE" || accountType === "NRO" ? ` - ${accountType}` : ""}
-        </p>
-        <div className="mt-1 flex items-end justify-between">
-          <h1 className="text-lg font-bold text-slate-900 lg:text-2xl">Complete the client's account opening</h1>
-          <p className="text-sm text-slate-500">
-            <span className="text-lg font-bold text-[var(--regime-color)] lg:text-xl">{percent}%</span>
-            <span className="hidden lg:inline"> completed</span>
-          </p>
+      <section className="relative overflow-hidden border-b border-slate-200/60 bg-white/60 px-4 pb-5 pt-5 backdrop-blur-sm lg:px-8 lg:pb-7 lg:pt-6">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-[var(--regime-color)] opacity-[0.07] blur-3xl" />
+        <div className="relative mx-auto max-w-6xl">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[var(--regime-soft)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--regime-color)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--regime-color)]" />
+            NRI onboarding{accountType === "NRE" || accountType === "NRO" ? ` · ${accountType}` : ""}
+          </span>
+          <div className="mt-2 flex items-end justify-between gap-4">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 lg:text-[1.75rem]">Complete the client's account opening</h1>
+            <div className="shrink-0 text-right">
+              <p className="text-2xl font-extrabold leading-none text-[var(--regime-color)] lg:text-3xl">{percent}%</p>
+              <p className="mt-1 hidden text-xs font-medium text-slate-400 lg:block">
+                Step {stepNumber} of {STEPS.length}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200/70">
+            <div
+              className="h-full rounded-full shadow-[0_0_12px_var(--regime-color)] transition-all duration-500"
+              style={{
+                width: `${percent}%`,
+                backgroundImage: "linear-gradient(90deg, color-mix(in srgb, var(--regime-color) 70%, white), var(--regime-color))",
+              }}
+            />
+          </div>
         </div>
-        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full rounded-full bg-[var(--regime-color)] transition-all" style={{ width: `${percent}%` }} />
-        </div>
-      </div>
+      </section>
 
       <MobileStepNav currentStepId={currentStepId} />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8">
-        {/* <div className="mb-5 flex flex-col gap-3 rounded-xl border border-slate-100 bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-3">
-          <span className="text-sm text-slate-500">ⓘ Preview customer path</span>
-          <div className="flex rounded-full bg-slate-100 p-1 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setPreviewBranch("found")}
-              className={`rounded-full px-3 py-1.5 transition ${
-                previewBranch === "found" ? "bg-white text-brand-blue shadow-sm" : "text-slate-400"
-              }`}
-            >
-              KRA record found
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewBranch("not_found")}
-              className={`rounded-full px-3 py-1.5 transition ${
-                previewBranch === "not_found" ? "bg-white text-brand-blue shadow-sm" : "text-slate-400"
-              }`}
-            >
-              Documents required
-            </button>
-          </div>
-        </div> */}
-
-        <div className="flex flex-col gap-6 lg:flex-row">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 lg:px-8 lg:py-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           <div className="hidden lg:block">
             <StepSidebar currentStepId={currentStepId} />
           </div>
           <div className="min-w-0 flex-1">{children}</div>
         </div>
       </main>
+
+      <footer className="px-4 pb-6 text-center text-xs text-slate-400">
+        <span className="inline-flex items-center gap-1.5">
+          <LockIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          Secure &amp; encrypted · Aionion Capital — Research | Trust | Forever
+        </span>
+      </footer>
     </div>
   );
 }

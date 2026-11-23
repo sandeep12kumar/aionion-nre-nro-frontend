@@ -7,8 +7,37 @@
      chosen -- matches brand.blue in tailwind.config.js (NRE's color, the
      default account type). See applicationState.js's applyRegimeTheme. */
   --regime-color: #0023ff;
+  /* the regime color, lightly tinted -- backgrounds, focus rings */
+  --regime-soft: color-mix(in srgb, var(--regime-color) 10%, white);
+  --regime-ring: color-mix(in srgb, var(--regime-color) 18%, transparent);
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  @apply text-slate-900 antialiased;
+  background-color: #f6f7fb;
+}
+
+@layer components {
+  /* the page background: soft Aionion blue / pink light from the corners */
+  .app-bg {
+    background-color: #f6f7fb;
+    background-image:
+      radial-gradient(60rem 32rem at -10% -15%, rgba(0, 35, 255, 0.07), transparent 60%),
+      radial-gradient(50rem 30rem at 110% -5%, rgba(254, 102, 124, 0.09), transparent 60%);
+    background-attachment: fixed;
+  }
+  /* the thin blue -> pink line across the top of every page */
+  .brand-strip {
+    @apply h-1 w-full bg-brand-gradient;
+  }
+  .brand-text {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+}
+
+/* text inputs and selects get a soft focus glow in the regime color */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 4px var(--regime-ring);
 }

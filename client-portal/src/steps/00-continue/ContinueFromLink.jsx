@@ -37,13 +37,13 @@ export default function ContinueFromLink() {
   }, [token, navigate]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-10">
+    <div className="app-bg relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
       <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-brand-blue/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-pink-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-brand-pink/15 blur-3xl" />
 
       <div className="relative w-full max-w-md">
         <div className="mb-6 text-center">
-          <p className="text-sm font-semibold tracking-wide text-pink-500">NRI ONBOARDING</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-pink">NRI onboarding</p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900 lg:text-3xl">Complete your NRI account opening</h1>
         </div>
 
