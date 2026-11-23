@@ -1,4 +1,5 @@
-import { STEPS, stepIndex } from "../../steps/stepsConfig";
+import { useNavigate } from "react-router-dom";
+import { STEPS, stepIndex, stepPath } from "../../steps/stepsConfig";
 import { IdCardIcon, BankIcon, UsersIcon, CardIcon, UserIcon, GlobeIcon, DocumentIcon, CameraIcon } from "../ui/icons";
 
 const STEP_ICONS = {
@@ -12,7 +13,10 @@ const STEP_ICONS = {
   scheme_link: CardIcon,
 };
 
+// Completed steps are links, so the RM can go back and correct one (e.g. the
+// NRE / NRO choice) without stepping back page by page.
 export default function StepSidebar({ currentStepId }) {
+  const navigate = useNavigate();
   const currentIndex = stepIndex(currentStepId);
 
   return (
@@ -30,11 +34,16 @@ export default function StepSidebar({ currentStepId }) {
             return (
               <li
                 key={step.id}
+                role={isDone ? "link" : undefined}
+                tabIndex={isDone ? 0 : undefined}
+                title={isDone ? `Go back to ${step.title}` : undefined}
+                onClick={isDone ? () => navigate(stepPath(step)) : undefined}
+                onKeyDown={isDone ? (e) => { if (e.key === "Enter") navigate(stepPath(step)); } : undefined}
                 className={`flex items-center gap-3 rounded-xl px-3 py-3 transition ${
                   isActive
                     ? "bg-[var(--regime-color)] text-white"
                     : isDone
-                      ? "bg-emerald-50"
+                      ? "cursor-pointer bg-emerald-50 hover:bg-emerald-100"
                       : ""
                 }`}
               >

@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import OnboardingShell from "../../components/layout/OnboardingShell";
 import Card from "../../components/ui/Card";
 import StepFooter from "../../components/layout/StepFooter";
-import { setAccountType, hasChosenAccountType, getAccountType, getBasePath } from "../../services/applicationState";
+import api from "../../services/api";
+import { setAccountType, hasChosenAccountType, getAccountType, getBasePath, getPanNumber, getRmEmail } from "../../services/applicationState";
 
 const ACCOUNT_TYPES = [
   {
@@ -29,19 +30,42 @@ const ACCOUNT_TYPES = [
 
 // The RM's step after the video IPV (/account-type): NRE or NRO decides the /nre or
 // /nro flow that follows, starting with the Aadhaar check.
+// The RM can come back here (Back, or the sidebar) to correct the choice.
+// Once the client's PAN is verified the application already exists, so a
+// change moves it to the other account type (POST /identity/:pan/account-type):
+// everything entered stays, except the bank & PIS documents, which the RM
+// uploads again -- so it continues at Bank & proofs.
 export default function AccountTypeStep() {
   const navigate = useNavigate();
-  const [selected, setSelected] = useState(hasChosenAccountType() ? getAccountType() : "");
+  const chosen = hasChosenAccountType() ? getAccountType() : "";
+  const panNumber = getPanNumber();
+  const [selected, setSelected] = useState(chosen);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const switching = Boolean(panNumber && chosen && selected && selected !== chosen);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selected) {
       setError("Choose NRE or NRO to continue.");
       return;
     }
-    setAccountType(selected);
-    navigate(`${getBasePath()}/aadhaar`);
+    if (!switching) {
+      setAccountType(selected);
+      navigate(`${getBasePath()}/aadhaar`);
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await api.post(`/identity/${panNumber}/account-type`, { accountType: selected, rmEmail: getRmEmail() });
+      setAccountType(selected);
+      navigate(`${getBasePath()}/bank`);
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to change the account type right now.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,9 +112,20 @@ export default function AccountTypeStep() {
             })}
           </div>
 
+          {switching && (
+            <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              This application ({panNumber}) will change from {chosen} to {selected}. The details entered so far are kept,
+              but the {chosen} bank and PIS documents are removed — you'll upload the {selected} ones next.
+            </p>
+          )}
+
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <StepFooter onBack={() => navigate("/ipv")} submitLabel="Continue" />
+          <StepFooter
+            onBack={() => navigate("/ipv")}
+            submitLabel={switching ? `Change to ${selected}` : "Continue"}
+            loading={loading}
+          />
         </form>
       </Card>
     </OnboardingShell>
