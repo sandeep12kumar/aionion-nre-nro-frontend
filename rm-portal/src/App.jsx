@@ -12,6 +12,14 @@ import AddressProofsStep from "./steps/05-address-proofs/AddressProofsStep";
 import PersonalNomineeStep from "./steps/03-personal-profile/PersonalNomineeStep";
 import SchemeLinkStep from "./steps/06-scheme-link/SchemeLinkStep";
 
+// /ipv only needs the RM's login (the IPV is the first step). This must be a
+// component: its check runs every time the route is shown. Written inline in
+// App ("isLoggedIn() ? ... : <Navigate>") it was worked out once, when the page
+// first loaded -- so after a fresh login the RM was sent back to the login page.
+function RequireRmLogin({ children }) {
+  return isLoggedIn() ? children : <Navigate to="/" replace />;
+}
+
 // rm-portal: the Relationship Manager's half of the NRI onboarding.
 //   RM Login -> Video IPV (client joins from the emailed link) -> Account type (NRE / NRO) -> Aadhaar check -> Identity & Contact ->
 //   Bank & proofs -> Address proofs -> Personal & Nominee -> Scheme (+ client
@@ -34,7 +42,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<RmLoginStep />} />
-      <Route path="/ipv" element={isLoggedIn() ? <IpvStep /> : <Navigate to="/" replace />} />
+      <Route path="/ipv" element={<RequireRmLogin><IpvStep /></RequireRmLogin>} />
       <Route path="/account-type" element={<RequireLogin><AccountTypeStep /></RequireLogin>} />
       <Route path="/:regime/aadhaar" element={<RequireLogin><AadhaarStep /></RequireLogin>} />
       <Route path="/:regime/identity" element={<RequireLogin requireAadhaar><IdentityStep /></RequireLogin>} />
