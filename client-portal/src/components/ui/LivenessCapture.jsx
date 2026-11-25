@@ -8,7 +8,7 @@ import * as faceapi from "face-api.js";
 // the photo. The clip itself is only analysed in the browser, not uploaded.
 // Without a usable latitude/longitude the capture never starts.
 
-const MODEL_URL = "/models";
+const MODEL_URL = `${import.meta.env.BASE_URL}models`;
 // low threshold so a second (partial / background) face is still noticed
 const DETECT_OPTS = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
 
