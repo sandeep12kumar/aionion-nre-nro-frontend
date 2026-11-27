@@ -44,6 +44,7 @@ export default function PaymentStep() {
 
   const [scheme, setScheme] = useState(null);
   const [alreadyPaid, setAlreadyPaid] = useState(false);
+  const [paidOffline, setPaidOffline] = useState(false);
   const [identity, setIdentity] = useState(null);
   const [personal, setPersonal] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -61,10 +62,30 @@ export default function PaymentStep() {
       setPersonal(personalRes.data.personalDetails);
       setScheme(schemeRes.data.scheme);
       setAlreadyPaid(paymentRes.data.payment?.status === "success");
+      setPaidOffline(paymentRes.data.payment?.payment_method === "offline");
     });
     // Warm the Checkout script up front so "Pay Now" opens the modal instantly.
     loadRazorpayCheckout().catch(() => {});
   }, [panNumber]);
+
+  // Paid offline: the office can skip the payment from the NRI dashboard
+  // (a 'success' entry, payment_method 'offline'). While the client waits on
+  // this page, check every few seconds and move on once it's recorded.
+  useEffect(() => {
+    if (!panNumber || alreadyPaid || loading) return undefined;
+    const timer = setInterval(async () => {
+      try {
+        const { data } = await api.get(`/payment/${panNumber}`);
+        if (data.payment?.status === "success") {
+          setAlreadyPaid(true);
+          if (data.payment.payment_method === "offline") navigate(nextStepPath("payment"));
+        }
+      } catch {
+        /* try again on the next tick */
+      }
+    }, 8000);
+    return () => clearInterval(timer);
+  }, [panNumber, alreadyPaid, loading, navigate]);
 
   const schemeInfo = SCHEMES[scheme?.scheme_key] || { label: scheme?.scheme_key, note: "" };
   const baseAmount = Number(scheme?.base_amount || 0);
@@ -226,7 +247,7 @@ export default function PaymentStep() {
 
           {alreadyPaid && (
             <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-              <CheckCircleIcon className="h-5 w-5" aria-hidden="true" /> Payment already completed.
+              <CheckCircleIcon className="h-5 w-5" aria-hidden="true" /> {paidOffline ? "Your payment has been received (paid offline)." : "Payment already completed."}
             </p>
           )}
 
